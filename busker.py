@@ -6,7 +6,7 @@ from os.path import expanduser
 
 # to talk to music players like Spotify
 def osascript(s):
-    return subprocess.Popen("osascript -e '%s'" % s, shell=True, stdout=PIPE).stdout.read().strip()
+    return subprocess.Popen("/usr/bin/osascript -e '%s'" % s, shell=True, stdout=PIPE).stdout.read().strip()
 
 PLAYER_STATE = 'tell application "Spotify" to player state'
 PLAYER_POSITION = 'tell application "Spotify" to player position'
@@ -16,7 +16,8 @@ ARTIST = 'tell application "Spotify" to artist of current track'
 TRACK = 'tell application "Spotify" to name of current track' 
 ALBUM = 'tell application "Spotify" to album of current track'
 
-LOGFILE = '~/Dropbox/projects/busker/donations.log'
+LOGFILE = '/Users/djbutler/Dropbox/projects/busker/donations.log'
+NOTIFIER = '/Applications/terminal-notifier.app/Contents/MacOS/terminal-notifier'
 GIFT_AMOUNT = 1
 
 # to create OSX notifications
@@ -27,7 +28,7 @@ def notify(title, subtitle, message, image, url, execute):
     c = '-contentImage {!r}'.format(image)
     u = '-open {!r}'.format(url)
     e = '-execute %s' % execute
-    cmd = 'terminal-notifier {}'.format(' '.join([m, t, s, c, u, e]))
+    cmd = NOTIFIER + ' {}'.format(' '.join([m, t, s, c, u, e]))
     print(cmd)
     os.system(cmd)
 
@@ -50,14 +51,14 @@ myList contains \"%s\""""
 def is_playing(app):
     return osascript(IS_PLAYING_CMD % app)
 
+MIN_PLAYS = 2
 if __name__ == "__main__":
     if bool(is_playing("Spotify")) and osascript(PLAYER_STATE) == 'playing':
         play_count = int(osascript(PLAY_COUNT))
         for line in open(expanduser(LOGFILE)):
             pass
-        if play_count > 1 and log(play_count,2) % 1 == 0.0:
+        if play_count >= MIN_PLAYS and log(play_count,2) % 1 == 0.0:
             track, artist = osascript(TRACK), osascript(ARTIST)
-            s = '%s | %s' % (artist, track)
-            if len(line) < len(s) or line[0:len(s)] != s:
+            if len(line) < len(artist) or line[0:len(artist)] != artist:
                 create_notification(track, artist, play_count)
             
