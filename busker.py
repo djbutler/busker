@@ -28,18 +28,21 @@ def notify(title, subtitle, message, image, url, execute):
     print(cmd)
     os.system(cmd)
 
-track, artist, play_count = osascript(TRACK), osascript(ARTIST), osascript(PLAY_COUNT)
+def create_notification():
+    track, artist, play_count = osascript(TRACK), osascript(ARTIST), osascript(PLAY_COUNT)
+    os.system("echo \'%s | %s | %s plays | asked $%d\' >> %s" % (artist, track, play_count, GIFT_AMOUNT, LOGFILE))
+    on_donate_cmd = "\"echo \'%s | %s | %s plays | gave \\$%d\' >> %s\"" % (artist, track, play_count, GIFT_AMOUNT, LOGFILE)
+    notify(title    = '%s | %s' % (track, artist),
+           subtitle = 'You\'ve listened %s times' % play_count,
+           message  = 'Click to send $%d to %s' % (GIFT_AMOUNT, artist),
+           image = '/Users/djbutler/Desktop/robyn.png',
+           url = 'https://venmo.com/?txn=pay&recipients=raffi.jaffe@gmail.com&amount=5&note=A+donation+from+Busker&audience=private',
+           execute = on_donate_cmd)
 
-os.system("echo \'%s | %s | %s plays | asked $%d\' >> %s" % (artist, track, play_count, GIFT_AMOUNT, LOGFILE))
-on_donate_cmd = "\"echo \'%s | %s | %s plays | gave \\$%d\' >> %s\"" % (artist, track, play_count, GIFT_AMOUNT, LOGFILE)
-notify(title    = '%s | %s' % (track, artist),
-       subtitle = 'You\'ve listened %s times' % play_count,
-       message  = 'Click to send $%d to %s' % (GIFT_AMOUNT, artist),
-       image = '/Users/djbutler/Desktop/robyn.png',
-       url = 'https://venmo.com/?txn=pay&recipients=raffi.jaffe@gmail.com&amount=5&note=A+donation+from+Busker&audience=private',
-       execute = on_donate_cmd)
+if __name__ == "__main__":
+    # if spotify is on and playing
+        # get play_count
+        # play_count = osascript(PLAY_COUNT)
+        # if play_count is a power of 2
+            # create a notification
 
-# print("track: %s" % osascript(TRACK))
-# print("play count: %s" % osascript(PLAY_COUNT))
-# print("artist: %s" % osascript(ARTIST))
-# print("album: %s" % osascript(ALBUM))
