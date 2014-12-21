@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 import subprocess, os
 from subprocess import PIPE
+from math import log
+from os.path import expanduser
 
 # to talk to music players like Spotify
 def osascript(s):
     return subprocess.Popen("osascript -e '%s'" % s, shell=True, stdout=PIPE).stdout.read().strip()
 
+PLAYER_STATE = 'tell application "Spotify" to player state'
 PLAYER_POSITION = 'tell application "Spotify" to player position'
 ARTWORK = 'tell application "Spotify" to artwork of current track'
 PLAY_COUNT = 'tell application "Spotify" to played count of current track'
@@ -28,7 +31,7 @@ def notify(title, subtitle, message, image, url, execute):
     print(cmd)
     os.system(cmd)
 
-def create_notification():
+def create_notification(track, artist, play_count):
     track, artist, play_count = osascript(TRACK), osascript(ARTIST), osascript(PLAY_COUNT)
     os.system("echo \'%s | %s | %s plays | asked $%d\' >> %s" % (artist, track, play_count, GIFT_AMOUNT, LOGFILE))
     on_donate_cmd = "\"echo \'%s | %s | %s plays | gave \\$%d\' >> %s\"" % (artist, track, play_count, GIFT_AMOUNT, LOGFILE)
@@ -39,10 +42,22 @@ def create_notification():
            url = 'https://venmo.com/?txn=pay&recipients=raffi.jaffe@gmail.com&amount=5&note=A+donation+from+Busker&audience=private',
            execute = on_donate_cmd)
 
-if __name__ == "__main__":
-    # if spotify is on and playing
-        # get play_count
-        # play_count = osascript(PLAY_COUNT)
-        # if play_count is a power of 2
-            # create a notification
+IS_PLAYING_CMD = \
+"""tell application \"System Events\"
+  set myList to (name of every process)
+end tell
+myList contains \"%s\""""
+def is_playing(app):
+    return osascript(IS_PLAYING_CMD % app)
 
+if __name__ == "__main__":
+    if bool(is_playing("Spotify")) and osascript(PLAYER_STATE) == 'playing':
+        play_count = int(osascript(PLAY_COUNT))
+        for line in open(expanduser(LOGFILE)):
+            pass
+        if play_count > 1 and log(play_count,2) % 1 == 0.0:
+            track, artist = osascript(TRACK), osascript(ARTIST)
+            s = '%s | %s' % (artist, track)
+            if len(line) < len(s) or line[0:len(s)] != s:
+                create_notification(track, artist, play_count)
+            
